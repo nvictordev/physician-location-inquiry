@@ -1,10 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const {mongoose} = require('./db/mongoose');
 const {Contact} = require('./models/contact');
 
 const app = express();
+app.use(cors())
 app.use(bodyParser.json());
 
 app.get('/search', (req, res) => {
@@ -27,6 +29,9 @@ app.get('/search', (req, res) => {
       }
     }));
   });
+});
+app.use((req, res, next) => {
+  res.status(404).send('<h2 align=center> Page Not Found!</h2>');
 });
 
 app.listen(5001, () => {

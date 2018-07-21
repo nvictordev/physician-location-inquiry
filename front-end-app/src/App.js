@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Route } from 'react-route-dom';
+import { Route } from 'react-router-dom';
 import MapSearch from './components/MapSearch';
 
 class App extends Component {
