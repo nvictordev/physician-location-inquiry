@@ -33,6 +33,7 @@ class MapSearch extends Component {
   }
 
   clickedName = (name) => {
+    this.clearState();
     let nameElement = name.toString().split(' ');
     if (nameElement.length === 2) {
       this.setState({
@@ -47,16 +48,26 @@ class MapSearch extends Component {
       })
     }
   }
-
-  handleClear = () => {
-    this.setState ({
+  
+  clearState = () => {
+    this.setState({
       firstNameQuery: '',
       middleNameQuery: '',
-      lastNameQuery: '',
-      names: []
+      lastNameQuery: ''
     })
   }
 
+  handleClear = () => {
+    this.clearState();
+    this.setState({ names: [] })
+  }
+
+  handleSubmit = (firstNameQuery, middleNameQuery, lastNameQuery) => {
+    axios.get(`http://localhost:5001/address`, {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
+    .then(res => res.data)
+    .then(address => console.log(adress))
+  }
+  
   render() {
     const { firstNameQuery, middleNameQuery, lastNameQuery, names, errorMessage } = this.state
     return (
@@ -83,7 +94,7 @@ class MapSearch extends Component {
             placeholder="Last Name"
             value={lastNameQuery}
             onChange={e => this.getNames(firstNameQuery, middleNameQuery, e.target.value)}/>
-          <input type="submit" value='Submit'/>
+          <input type="submit" value='Submit' onClick={() => this.handleSubmit(firstNameQuery, middleNameQuery, lastNameQuery)}/>
           <input type="reset" value='Clear' onClick={() => this.handleClear()}/>
         </div>
         <div>
