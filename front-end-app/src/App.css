@@ -16,3 +16,7 @@
 .App-intro {
   font-size: large;
 }
+
+ul li {
+  cursor: pointer;
+}

@@ -7,6 +7,7 @@ class MapSearch extends Component {
     middleNameQuery: '',
     lastNameQuery: '',
     names: [],
+    selectedName: '',
     errorMessage: false
   }
 
@@ -31,6 +32,31 @@ class MapSearch extends Component {
     }
   }
 
+  clickedName = (name) => {
+    let nameElement = name.toString().split(' ');
+    if (nameElement.length === 2) {
+      this.setState({
+        firstNameQuery: nameElement[0],
+        lastNameQuery: nameElement[1]
+      })
+    } else if (nameElement.length === 3) {
+      this.setState({
+        firstNameQuery: nameElement[0],
+        middleNameQuery: nameElement[1],
+        lastNameQuery: nameElement[2]
+      })
+    }
+  }
+
+  handleClear = () => {
+    this.setState ({
+      firstNameQuery: '',
+      middleNameQuery: '',
+      lastNameQuery: '',
+      names: []
+    })
+  }
+
   render() {
     const { firstNameQuery, middleNameQuery, lastNameQuery, names, errorMessage } = this.state
     return (
@@ -53,16 +79,18 @@ class MapSearch extends Component {
             value={middleNameQuery}
             onChange={e => this.getNames(firstNameQuery, e.target.value, lastNameQuery)}/>
           <input type="text"
-            name="secondSearch"
+            name="lastSearch"
             placeholder="Last Name"
             value={lastNameQuery}
             onChange={e => this.getNames(firstNameQuery, middleNameQuery, e.target.value)}/>
+          <input type="submit" value='Submit'/>
+          <input type="reset" value='Clear' onClick={() => this.handleClear()}/>
         </div>
         <div>
           <ul>
             {names.map(((name, i) => {
               return (
-              <li key={i}>
+              <li key={i} onClick={() => this.clickedName(name)}>
                 {name}
               </li>
               )
