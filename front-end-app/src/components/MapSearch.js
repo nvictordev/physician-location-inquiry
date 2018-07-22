@@ -48,7 +48,7 @@ class MapSearch extends Component {
       })
     }
   }
-  
+
   clearState = () => {
     this.setState({
       firstNameQuery: '',
@@ -65,9 +65,24 @@ class MapSearch extends Component {
   handleSubmit = (firstNameQuery, middleNameQuery, lastNameQuery) => {
     axios.get(`http://localhost:5001/address`, {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
     .then(res => res.data)
-    .then(address => console.log(adress))
+    .then(addressRes => {
+      let address = addressRes.street + ' ' + addressRes.city + ' ' + addressRes.state + ' ' + addressRes.zipCode;
+      let encodedAddress = encodeURIComponent(address);
+      return this.geocodeAddress(encodedAddress);
+    })
   }
-  
+
+  geocodeAddress = (address) => {
+    axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAGJbp_3gN-93tizIua--RgRmjCtpB3wLw`)
+    .then(res => res.data)
+    .then(location => {
+      return {
+        lat: location.results[0].geometry.location.lat,
+        lng: location.results[0].geometry.location.lng
+      }
+    })
+  }
+
   render() {
     const { firstNameQuery, middleNameQuery, lastNameQuery, names, errorMessage } = this.state
     return (
