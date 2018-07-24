@@ -1,5 +1,5 @@
-import React, {Component} from 'react';
-import axios from 'axios';
+import React, {Component} from 'react'
+import axios from 'axios'
 
 class MapSearch extends Component {
   state = {
@@ -8,13 +8,48 @@ class MapSearch extends Component {
     lastNameQuery: '',
     names: [],
     selectedName: '',
-    errorMessage: false
+    lat: '',
+    lng: '',
+    map: '',
+    showMarker: false,
+    errorMessage: false,
   }
+
+  componentDidMount() {
+    window.initMap = this.initMap;
+    loadMap(
+      'https://maps.googleapis.com/maps/api/js?key=AIzaSyAGJbp_3gN-93tizIua--RgRmjCtpB3wLw&callback=initMap'
+    );
+  }
+
+  initMap = () => {
+    let map = new window.google.maps.Map(document.getElementById('map'), {
+      center: {lat: 30.2727757, lng: -97.7522372},
+      zoom: 15,
+      mapTypeControl: true
+    });
+    this.setState({ map: map })
+  }
+
+  Marker = () => {
+    let marker = new window.google.maps.Marker({
+      position: { lat: parseFloat(this.state.lat), lng: parseFloat(this.state.lng) },
+      title: 'Physician',
+      animation: window.google.maps.Animation.DROP
+    });
+    if (this.state.showMarker === true) {
+      this.state.map.setCenter(marker.getPosition())
+      marker.setMap(this.state.map);
+    } else if (this.state.showMarker === false) {
+      marker.setMap(null);
+    }
+  } 
 
   getNames = (firstNameQuery, middleNameQuery, lastNameQuery) => {
     this.setState({ firstNameQuery, middleNameQuery, lastNameQuery })
     if (firstNameQuery || middleNameQuery || lastNameQuery) {
-      axios.get(`http://localhost:5001/search`, {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
+      axios.get(`http://localhost:5001/search`, 
+        {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
       .then(res => res.data)
       .then((contacts) => {
         this.setState({
@@ -27,8 +62,11 @@ class MapSearch extends Component {
           })
         })
       })
+      .catch(e => this.setState({
+        errorMessage: true,
+      }))
     } else {
-      this.setState({ names: [] })
+      this.setState({ names: [], errorMessage: false, serverError: false })
     }
   }
 
@@ -40,7 +78,7 @@ class MapSearch extends Component {
         firstNameQuery: nameElement[0],
         lastNameQuery: nameElement[1]
       })
-    } else if (nameElement.length === 3) {
+    } else if (nameElement.length > 2) {
       this.setState({
         firstNameQuery: nameElement[0],
         middleNameQuery: nameElement[1],
@@ -53,33 +91,48 @@ class MapSearch extends Component {
     this.setState({
       firstNameQuery: '',
       middleNameQuery: '',
-      lastNameQuery: ''
+      lastNameQuery: '',
+      names: []
     })
   }
 
   handleClear = () => {
     this.clearState();
-    this.setState({ names: [] })
+    this.setState({ 
+      showMarker: false,
+      errorMessage: false
+    }, this.Marker);
   }
 
   handleSubmit = (firstNameQuery, middleNameQuery, lastNameQuery) => {
-    axios.get(`http://localhost:5001/address`, {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
-    .then(res => res.data)
-    .then(addressRes => {
-      let address = addressRes.street + ' ' + addressRes.city + ' ' + addressRes.state + ' ' + addressRes.zipCode;
-      let encodedAddress = encodeURIComponent(address);
-      return this.geocodeAddress(encodedAddress);
-    })
+    if (firstNameQuery && lastNameQuery) {
+      this.setState({ errorMessage: false, names: [] });
+      axios.get(`http://localhost:5001/address`, 
+        {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
+      .then(res => res.data)
+      .then(addressRes => {
+        let address = addressRes.street + ' ' + addressRes.city + ' ' + addressRes.state + ' ' + addressRes.zipCode;
+        let encodedAddress = encodeURIComponent(address);
+        this.geocodeAddress(encodedAddress);
+      })
+      .catch(e => this.setState({
+        errorMessage: true,
+        showMarker: false
+      }))
+    } else {
+      this.setState({ errorMessage: true})
+    }
   }
 
   geocodeAddress = (address) => {
     axios.get(`https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAGJbp_3gN-93tizIua--RgRmjCtpB3wLw`)
     .then(res => res.data)
     .then(location => {
-      return {
-        lat: location.results[0].geometry.location.lat,
-        lng: location.results[0].geometry.location.lng
-      }
+      this.setState({
+          lat: location.results[0].geometry.location.lat,
+          lng: location.results[0].geometry.location.lng,
+          showMarker: true
+      }, this.Marker)
     })
   }
 
@@ -109,10 +162,11 @@ class MapSearch extends Component {
             placeholder="Last Name"
             value={lastNameQuery}
             onChange={e => this.getNames(firstNameQuery, middleNameQuery, e.target.value)}/>
-          <input type="submit" value='Submit' onClick={() => this.handleSubmit(firstNameQuery, middleNameQuery, lastNameQuery)}/>
+          <input type="submit" value='Submit' onClick={() => 
+            this.handleSubmit(firstNameQuery, middleNameQuery, lastNameQuery)}/>
           <input type="reset" value='Clear' onClick={() => this.handleClear()}/>
         </div>
-        <div>
+        <div className="Search-modal">
           <ul>
             {names.map(((name, i) => {
               return (
@@ -123,9 +177,30 @@ class MapSearch extends Component {
             }))}
           </ul>
         </div>
+        { errorMessage && (
+          <section>
+            <h4>No Name/Address was found</h4>
+          </section>
+        )}
+        <section>
+          <div id="map">
+            Loading Map
+          </div>
+        </section>
       </div>
     );
   }
 }
 
 export default MapSearch;
+
+function loadMap(src) {
+  const ref = window.document.getElementsByTagName('script')[0];
+  let script = window.document.createElement('script');
+  script.src = src;
+  script.async = true;
+  script.onerror = function () {
+    document.write('Error occured when loading map');
+  };
+  ref.parentNode.insertBefore(script, ref);
+}
