@@ -22,46 +22,50 @@ app.get('/search', (req, res) => {
   let nameFirst = { $regex: `^${req.query.firstName}`, $options: 'i' };
   let nameMiddle = { $regex: `^${req.query.middleName}`, $options: 'i' };
   let nameLast = { $regex: `^${req.query.lastName}`, $options: 'i' };
-  return Contact.find({
+  Contact.find({
     Physician_First_Name: nameFirst,
     Physician_Middle_Name: nameMiddle,
-    Physician_Last_Name: nameLast}, (err, results) => {
-      if (results) {
-        return res.send(results.map((result) => {
-          let firstName = titleCase(result.Physician_First_Name);
-          let middleName = titleCase(result.Physician_Middle_Name);
-          let lastName = titleCase(result.Physician_Last_Name);
-          return {
-            firstName,
-            middleName,
-            lastName
-          }
-        }));
-      } else {
-        return res.status(404).send(err);
+    Physician_Last_Name: nameLast
+  })
+  .then(results => {
+    res.send(results.map((result) => {
+      let firstName = titleCase(result.Physician_First_Name);
+      let middleName = titleCase(result.Physician_Middle_Name);
+      let lastName = titleCase(result.Physician_Last_Name);
+      return {
+        firstName,
+        middleName,
+        lastName
       }
-  });
+    }))
+  }, (e) => {
+    res.status(404).send(e);
+  }).catch(e => {
+    res.status(400).send(e);
+  })
 });
+
 app.get('/address', (req, res) => {
   let nameFirst = new RegExp(req.query.firstName, 'i');
   let nameMiddle = new RegExp(req.query.middleName, 'i');
   let nameLast = new RegExp(req.query.lastName, 'i');
-  return Contact.findOne({
+  Contact.findOne({
     Physician_First_Name: nameFirst,
     Physician_Middle_Name: nameMiddle,
     Physician_Last_Name: nameLast
-  }, (err, result) => {
-    if (results) {
-      return res.send({
-        street: result.Recipient_Primary_Business_Street_Address_Line1,
-        city: result. Recipient_City,
-        state: result.Recipient_State,
-        zipCode: result.Recipient_Zip_Code
-      });
-    } else if (err) {
-      return res.status(404).send(err);
-    }
-  });
+  })
+  .then(results => {
+    res.send({
+      street: result.Recipient_Primary_Business_Street_Address_Line1,
+      city: result. Recipient_City,
+      state: result.Recipient_State,
+      zipCode: result.Recipient_Zip_Code
+    });
+  }, (e) => {
+    res.status(404).send(e);
+  }).catch(e => {
+    res.status(400).send(e);
+  })
 });
 
 app.use((req, res, next) => {
