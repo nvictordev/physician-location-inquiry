@@ -1,3 +1,5 @@
+require('./config/config');
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -6,6 +8,7 @@ const {mongoose} = require('./db/mongoose');
 const {Contact} = require('./models/contact');
 
 const app = express();
+const port = process.env.PORT;
 app.use(cors())
 app.use(bodyParser.json());
 
@@ -80,5 +83,5 @@ app.use((req, res, next) => {
 });
 
 app.listen(5001, () => {
-  console.log('port 5001 starts')
+  console.log(`Started on port ${port}`)
 });
