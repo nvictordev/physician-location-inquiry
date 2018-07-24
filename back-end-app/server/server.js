@@ -10,12 +10,16 @@ app.use(cors())
 app.use(bodyParser.json());
 
 const titleCase = (str) => {
-  lowerStr = str.toLowerCase().split('');
-  for (var i = 0; i < lowerStr.length; i++) {
-    lowerStr[0] = lowerStr[0].toUpperCase();
-    word = lowerStr.join('');
+  if (str) {
+    lowerStr = str.toLowerCase().split('');
+    for (var i = 0; i < lowerStr.length; i++) {
+      lowerStr[0] = lowerStr[0].toUpperCase();
+      word = lowerStr.join('');
+    }
+    return word;
+  } else {
+    return null;
   }
-  return word;
 };
 
 app.get('/search', (req, res) => {
@@ -54,7 +58,10 @@ app.get('/address', (req, res) => {
     Physician_Middle_Name: nameMiddle,
     Physician_Last_Name: nameLast
   })
-  .then(results => {
+  .then(result => {
+    if (result.length === 0) {
+      return new Error('No match in database')
+    }
     res.send({
       street: result.Recipient_Primary_Business_Street_Address_Line1,
       city: result. Recipient_City,
