@@ -13,6 +13,9 @@ class MapSearch extends Component {
     map: '',
     showMarker: false,
     errorMessage: false,
+    street: '',
+    city: '',
+    state: '',
   }
 
   componentDidMount() {
@@ -37,9 +40,14 @@ class MapSearch extends Component {
       title: 'Physician',
       animation: window.google.maps.Animation.DROP
     });
+    this.setState({ marker: marker })
+    let infoWindow = new window.google.maps.InfoWindow({}) 
     if (this.state.showMarker === true) {
       this.state.map.setCenter(marker.getPosition())
       marker.setMap(this.state.map);
+      infoWindow.open(this.state.map, marker);
+      infoWindow.setContent('<div><h3>'+ this.state.firstNameQuery + ' ' + this.state.lastNameQuery+ '</h3></div>' + 
+      '<br><div>' + this.state.street + '</div><br><div>' + this.state.city + ' ' + this.state.state + '</div>')
     } else if (this.state.showMarker === false) {
       marker.setMap(null);
     }
@@ -111,6 +119,11 @@ class MapSearch extends Component {
         {params: {firstName: firstNameQuery, middleName: middleNameQuery, lastName: lastNameQuery}})
       .then(res => res.data)
       .then(addressRes => {
+        this.setState({
+          street: addressRes.street,
+          city: addressRes.city,
+          state: addressRes.state,
+        });
         let address = addressRes.street + ' ' + addressRes.city + ' ' + addressRes.state + ' ' + addressRes.zipCode;
         let encodedAddress = encodeURIComponent(address);
         this.geocodeAddress(encodedAddress);
